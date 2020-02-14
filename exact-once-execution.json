@@ -50,3 +50,33 @@
     "window_period": "10m"
   }
 }
+
+
+POST _scripts/update_trigger_time
+{
+  "script": {
+    "lang": "painless",
+    "source": """
+      // If new, then initialize relevant fields.
+      ctx._source['previous_trigger_time'] = ctx._source['trigger_time'];
+      ctx._source['trigger_time'] = params.trigger_time;
+    
+    """
+  }
+}
+
+
+POST watch_idx1/_update/watcher_tracker_doc?_source
+{
+  "scripted_upsert": true,
+  "script": {
+    "id": "update_trigger_time",
+    "params": {
+      "trigger_time": "2020-02-14T22:32:46Z"
+    }
+  },
+  "upsert": {
+    "trigger_time": "1900-01-01T00:00:00+00:00"
+  }
+}
+    
