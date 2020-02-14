@@ -14,9 +14,18 @@
                 "scheme": "http",
                 "host": "localhost",
                 "port": 9200,
-                "method": "get",
-                "path": "/.track_last_watch_execution/_doc/watch_idx1",
-                "params": {},
+                "method": "POST",
+                "path": "watcher_last_execution/_update/watcher_tracker_doc?_source",
+                "scripted_upsert": true,
+                "script": {
+                  "id": "update_trigger_time",
+                  "params": {
+                    "trigger_time": "2020-02-14T22:32:46Z"
+                  }
+                },
+                "upsert": {
+                  "trigger_time": "1900-01-01T00:00:00+00:00"
+                },
                 "headers": {}
               }
             }
@@ -26,7 +35,7 @@
           "get_time_of_last_watch_execution": {
             "transform": {
               "script": {
-                "source": "if ((ctx.payload.get_last_watch_execution_tracking_document).containsKey(\"ingest_timestamp\")) {return ctx.payload.get_last_watch_execution_tracking_document.ingest_timestamp} else {return \"1900-01-01T00:00:00+00:00\"}",
+                "source": "return ctx.payload.get_last_watch_execution_tracking_document.ingest_timestamp",
                 "lang": "painless"
               }
             }
@@ -79,4 +88,3 @@ POST watch_idx1/_update/watcher_tracker_doc?_source
     "trigger_time": "1900-01-01T00:00:00+00:00"
   }
 }
-    
