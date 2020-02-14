@@ -1,0 +1,42 @@
+{
+  "trigger": {
+    "schedule": {
+      "interval": "10m"
+    }
+  },
+  "input": {
+    "chain": {
+      "inputs": [
+        {
+          "get_last_watch_execution": {
+            "http": {
+              "request": {
+                "scheme": "http",
+                "host": "localhost",
+                "port": 9200,
+                "method": "get",
+                "path": "/.track_last_watch_execution/_doc/watch_idx1",
+                "params": {},
+                "headers": {}
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "condition": {
+    "always": {}
+  },
+  "actions": {
+    "log": {
+      "logging": {
+        "level": "info",
+        "text": "New Processes started! \n {{ctx.payload}}"
+      }
+    }
+  },
+  "metadata": {
+    "window_period": "10m"
+  }
+}
