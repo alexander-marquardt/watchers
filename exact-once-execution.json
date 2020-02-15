@@ -51,24 +51,24 @@
                 "indices": [
                   "name-of-the-index-to-watch"
                 ],
+                "rest_total_hits_as_int": true,
                 "body": {
-                    "query": {
-                        "bool": {
-                  "filter": [
-                      {
-                    "range": {
-                      "@timestamp": {
-                        "gte": "{{ctx.payload.get_time_of_last_watch_execution._value}}"
-                      }
+                  "query": {
+                    "bool": {
+                      "filter": [
+                        {
+                          "range": {
+                            "@timestamp": {
+                              "gte": "{{ctx.payload.get_time_of_last_watch_execution._value}}"
+                            }
+                          }
+                        }
+                      ]
                     }
-                      }
-                  ]
+                  }
                 }
-                    }
-                }
-                
               }
-            }  
+            }
           }
         }
       ]
