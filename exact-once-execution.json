@@ -81,7 +81,7 @@
     "log": {
       "logging": {
         "level": "info",
-        "text": "New Processes started! \n {{ctx.payload.get_time_of_last_watch_execution}}"
+        "text": "New Processes started! \n {{ctx.payload.watch_for_events_since_last_trigger}}"
       }
     }
   },
