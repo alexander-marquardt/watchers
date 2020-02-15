@@ -8,25 +8,27 @@
     "chain": {
       "inputs": [
         {
-          "get_last_watch_execution_tracking_document": {
-            "http": {
+          "get_last_time_watch_was_triggered": {
+            "search": {
               "request": {
-                "scheme": "http",
-                "host": "localhost",
-                "port": 9200,
-                "method": "POST",
-                "path": "watcher_last_execution/_update/watcher_tracker_doc?_source",
-                "scripted_upsert": true,
-                "script": {
-                  "id": "update_trigger_time",
-                  "params": {
-                    "trigger_time": "2020-02-14T22:32:46Z"
+                "search_type": "query_then_fetch",
+                "indices": [
+                  ".watcher-history-*"
+                ],
+                "rest_total_hits_as_int": true,
+                "body": {
+                  "size": 1,
+                  "sort": {
+                    "trigger_event.triggered_time": {
+                      "order": "desc"
+                    }
+                  },
+                  "query": {
+                    "term": {
+                      "metadata.name": "mytest"
+                    }
                   }
-                },
-                "upsert": {
-                  "trigger_time": "1900-01-01T00:00:00+00:00"
-                },
-                "headers": {}
+                }
               }
             }
           }
@@ -35,10 +37,38 @@
           "get_time_of_last_watch_execution": {
             "transform": {
               "script": {
-                "source": "return ctx.payload.get_last_watch_execution_tracking_document.ingest_timestamp",
+                "source": "if (ctx.payload.get_last_time_watch_was_triggered.hits.total > 0) {return ctx.payload.get_last_time_watch_was_triggered.hits.hits[0]._source.trigger_event.triggered_time} else {return ctx.trigger.triggered_time}",
                 "lang": "painless"
               }
             }
+          }
+        },
+        {
+          "watch_for_events_since_last_trigger": {
+            "search": {
+              "request": {
+                "search_type": "query_then_fetch",
+                "indices": [
+                  "name-of-the-index-to-watch"
+                ],
+                "body": {
+                    "query": {
+                        "bool": {
+                  "filter": [
+                      {
+                    "range": {
+                      "@timestamp": {
+                        "gte": "{{ctx.payload.get_time_of_last_watch_execution._value}}"
+                      }
+                    }
+                      }
+                  ]
+                }
+                    }
+                }
+                
+              }
+            }  
           }
         }
       ]
@@ -51,40 +81,11 @@
     "log": {
       "logging": {
         "level": "info",
-        "text": "New Processes started! \n {{ctx.payload.get_time_of_last_watch_execution.ingest_timestamp}}"
+        "text": "New Processes started! \n {{ctx.payload.get_time_of_last_watch_execution}}"
       }
     }
   },
   "metadata": {
     "window_period": "10m"
-  }
-}
-
-
-POST _scripts/update_trigger_time
-{
-  "script": {
-    "lang": "painless",
-    "source": """
-      // If new, then initialize relevant fields.
-      ctx._source['previous_trigger_time'] = ctx._source['trigger_time'];
-      ctx._source['trigger_time'] = params.trigger_time;
-    
-    """
-  }
-}
-
-
-POST watch_idx1/_update/watcher_tracker_doc?_source
-{
-  "scripted_upsert": true,
-  "script": {
-    "id": "update_trigger_time",
-    "params": {
-      "trigger_time": "2020-02-14T22:32:46Z"
-    }
-  },
-  "upsert": {
-    "trigger_time": "1900-01-01T00:00:00+00:00"
   }
 }
